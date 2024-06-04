@@ -51,7 +51,6 @@ class App:
         self.handle_events()
         self.draw_vertices()
         self.draw_edges()
-        print(self.manager_3d.get_hided_face())
 
         pygame.display.update()
         self.clock.tick(60)
