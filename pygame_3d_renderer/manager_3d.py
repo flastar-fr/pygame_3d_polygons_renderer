@@ -2,9 +2,9 @@ from math import cos, sin
 
 import numpy as np
 
-from pygame import Vector3
+from pygame import Vector3, Vector2
 
-from structures import structures
+from polygons import polygons
 
 
 scale_factor = 200
@@ -20,9 +20,9 @@ class Manager3d:
         self.focal_lenght = 500
 
     def change_structure(self, structure_name: str):
-        self.vertices = structures[structure_name]["vertices"]
-        self.edges = structures[structure_name]["edges"]
-        self.faces = structures[structure_name]["faces"]
+        self.vertices = polygons[structure_name]["vertices"]
+        self.edges = polygons[structure_name]["edges"]
+        self.faces = polygons[structure_name]["faces"]
 
     def get_center(self):
         center = Vector3()
@@ -40,6 +40,40 @@ class Manager3d:
              (self.focal_lenght + (transformed_vertex.z * scale_factor)))
 
         return x, y
+
+    # noinspection PyUnusedLocal,PyUnreachableCode
+    def _get_z_point_in_face(self, point: Vector2, face: str) -> tuple[float, float, float, float]:
+        # cartesian equation of a plan : ax + by + cz + d = 0
+        p1, p2, p3 = self.vertices[face[0]], self.vertices[face[1]], self.vertices[face[2]]
+
+        v1 = p2 - p1
+        v2 = p3 - p1
+
+        normal_vector = np.cross(v1, v2)   # values : a, b, c
+        a, b, c = normal_vector
+
+        d = -np.dot(normal_vector, p1)  # value : d
+
+        return a, b, c, d
+
+    def is_point_not_visible(self, vertex_name: str) -> bool:
+        for face in self.faces:
+            if vertex_name not in face:
+                vertex = self.vertices[vertex_name]
+                a, b, c, d = self._get_z_point_in_face(vertex.xy, face)
+
+                if c == 0:
+                    return False
+
+                z_face_point = -(a * vertex.x + b * vertex.y + d) / c
+
+                if z_face_point >= vertex.z:
+                    return False
+
+        return True
+
+    def is_edge_not_visible(self, edge: str) -> bool:
+        return self.is_point_not_visible(edge[0]) or self.is_point_not_visible(edge[1])
 
     def rotate_points(self, x_angle, y_angle, z_angle):
         center = self.get_center()
