@@ -30,7 +30,7 @@ class App:
     def draw_vertices(self):
         width, height = self.screen.get_size()
         for key, vertex in self.manager_3d.vertices.items():
-            if not self.manager_3d.is_point_not_visible(key) or self.show_hided:
+            if self.manager_3d.is_point_visible(key) or self.show_hided:
                 x, y = self.manager_3d.get_point_2d_position(vertex)
                 x, y = x + width // 2, y + height // 2
                 pygame.draw.circle(self.screen, pygame.Color(255, 255, 255), (x, y), 5)
@@ -39,7 +39,7 @@ class App:
         vertex_table = self.manager_3d.vertices
         width, height = self.screen.get_size()
         for edge in self.manager_3d.edges:
-            if not self.manager_3d.is_edge_not_visible(edge) or self.show_hided:
+            if self.manager_3d.is_edge_visible(edge) or self.show_hided:
                 x1, y1 = self.manager_3d.get_point_2d_position(vertex_table[edge[0]])
                 x2, y2 = self.manager_3d.get_point_2d_position(vertex_table[edge[1]])
 

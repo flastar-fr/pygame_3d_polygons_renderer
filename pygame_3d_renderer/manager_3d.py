@@ -56,24 +56,24 @@ class Manager3d:
 
         return a, b, c, d
 
-    def is_point_not_visible(self, vertex_name: str) -> bool:
+    def is_point_visible(self, vertex_name: str) -> bool:
+        vertex = self.vertices[vertex_name]
         for face in self.faces:
             if vertex_name not in face:
-                vertex = self.vertices[vertex_name]
                 a, b, c, d = self._get_z_point_in_face(vertex.xy, face)
 
                 if c == 0:
-                    return False
+                    continue
 
-                z_face_point = -(a * vertex.x + b * vertex.y + d) / c
+                z_face_point = -(a*vertex.x + b*vertex.y + d) / c
 
-                if z_face_point >= vertex.z:
+                if z_face_point <= vertex.z:
                     return False
 
         return True
 
-    def is_edge_not_visible(self, edge: str) -> bool:
-        return self.is_point_not_visible(edge[0]) or self.is_point_not_visible(edge[1])
+    def is_edge_visible(self, edge: str) -> bool:
+        return self.is_point_visible(edge[0]) or self.is_point_visible(edge[1])
 
     def rotate_points(self, x_angle, y_angle, z_angle):
         center = self.get_center()
