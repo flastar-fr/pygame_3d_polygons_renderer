@@ -65,6 +65,7 @@ class Manager3d:
                 if c == 0:
                     continue
 
+                # cartesian equation : z = -(ax + by + d) / 3
                 z_face_point = -(a*vertex.x + b*vertex.y + d) / c
 
                 if z_face_point <= vertex.z:
