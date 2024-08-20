@@ -2,7 +2,7 @@ from math import cos, sin
 
 import numpy as np
 
-from pygame import Vector3, Vector2
+from pygame import Vector3
 
 from polygons import polygons
 
@@ -42,7 +42,7 @@ class Manager3d:
         return x, y
 
     # noinspection PyUnusedLocal,PyUnreachableCode
-    def _get_z_point_in_face(self, point: Vector2, face: str) -> tuple[float, float, float, float]:
+    def _get_z_point_in_face(self, face: str) -> tuple[float, float, float, float]:
         # cartesian equation of a plan : ax + by + cz + d = 0
         p1, p2, p3 = self.vertices[face[0]], self.vertices[face[1]], self.vertices[face[2]]
 
@@ -56,16 +56,57 @@ class Manager3d:
 
         return a, b, c, d
 
+    def _get_face_corners(self, face: str) -> tuple[Vector3, Vector3, Vector3, Vector3]:
+        default_vector = self.vertices[face[0]]
+        left = default_vector.x
+        right = default_vector.x
+        top = default_vector.y
+        bottom = default_vector.y
+        for vertex in face[1:]:
+            vertex_vector = self.vertices[vertex]
+            if vertex_vector.x < left:
+                left = vertex_vector.x
+            if vertex_vector.x > right:
+                right = vertex_vector.x
+            if vertex_vector.y > top:
+                top = vertex_vector.y
+            if vertex_vector.y < bottom:
+                bottom = vertex_vector.y
+
+        return left, right, top, bottom
+
+    def _check_point_alignment_to_face(self, point: Vector3, face: str) -> bool:
+        left, right, top, bottom = self._get_face_corners(face)
+
+        if not left < point.x < right:
+            return False
+
+        if not top > point.y > bottom:
+            return False
+
+        return True
+
+    def _check_alignment(self, vertex_name: str) -> bool:
+        """ Method that returns True if the vertex is align with a face, otherwise it returns False """
+        vertex = self.vertices[vertex_name]
+        for face in self.faces:
+            if vertex_name not in face and self._check_point_alignment_to_face(vertex, face):
+                return True
+        return False
+
     def is_point_visible(self, vertex_name: str) -> bool:
         vertex = self.vertices[vertex_name]
         for face in self.faces:
             if vertex_name not in face:
-                a, b, c, d = self._get_z_point_in_face(vertex.xy, face)
+                if not self._check_point_alignment_to_face(vertex, face):
+                    continue
+
+                a, b, c, d = self._get_z_point_in_face(face)
 
                 if c == 0:
                     continue
 
-                # cartesian equation : z = -(ax + by + d) / 3
+                # cartesian equation : z = -(ax + by + d) / c
                 z_face_point = -(a*vertex.x + b*vertex.y + d) / c
 
                 if z_face_point <= vertex.z:
@@ -74,6 +115,8 @@ class Manager3d:
         return True
 
     def is_edge_visible(self, edge: str) -> bool:
+        if self._check_alignment(edge[0]) or self._check_alignment(edge[1]):
+            return False
         return self.is_point_visible(edge[0]) or self.is_point_visible(edge[1])
 
     def rotate_points(self, x_angle, y_angle, z_angle):
